@@ -47,6 +47,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     let mounted = true;
+    const initialSessionRequestId = ++authRequestIdRef.current;
 
     const resetAuthState = () => {
       if (!mounted) return;
@@ -95,8 +96,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     });
 
     supabase.auth.getSession().then(async ({ data: { session: sess }, error }) => {
-      const initRequestId = authRequestIdRef.current;
-      if (!mounted || authRequestIdRef.current !== initRequestId) return;
+      if (!mounted || authRequestIdRef.current !== initialSessionRequestId) return;
 
       const authError = error as { code?: string; message?: string } | null;
       const isMissingRefreshToken = authError?.code === 'refresh_token_not_found'
@@ -126,6 +126,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const login = async (password: string): Promise<{ error?: string }> => {
     try {
+      authRequestIdRef.current += 1;
       setLoading(true);
       setRoles([]);
 
